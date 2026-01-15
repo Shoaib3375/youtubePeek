@@ -1,0 +1,899 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Video Peek & Download</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #667eea;
+      --primary-dark: #764ba2;
+      --accent-pink: #f093fb;
+      --accent-red: #f5576c;
+      --accent-cyan: #00f2fe;
+      --accent-blue: #4facfe;
+      --text-dark: #333;
+      --text-light: #999;
+      --border-light: #e0e0e0;
+      --bg-light: #f9f9f9;
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+      --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      color: var(--text-dark);
+    }
+
+    /* Navigation Bar */
+    .navbar {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow-md);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      animation: slideDown 0.5s ease-out;
+    }
+
+    .navbar-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .navbar-logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+    }
+
+    .navbar-menu {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .navbar-menu a {
+      color: var(--text-dark);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s ease;
+      position: relative;
+    }
+
+    .navbar-menu a:hover {
+      color: var(--primary);
+    }
+
+    .navbar-menu a::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      transition: width 0.3s ease;
+    }
+
+    .navbar-menu a:hover::after {
+      width: 100%;
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      color: white;
+      margin-bottom: 3rem;
+      animation: slideDown 0.6s ease-out;
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+      opacity: 0.95;
+      font-weight: 300;
+      margin-bottom: 2rem;
+    }
+
+    .feature-badges {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
+    }
+
+    .badge {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      padding: 0.5rem 1.25rem;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      animation: slideUp 0.6s ease-out;
+    }
+
+    /* Main Card */
+    .card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: var(--shadow-lg);
+      padding: 2.5rem;
+      animation: slideUp 0.6s ease-out;
+      margin-bottom: 3rem;
+    }
+
+    .card-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      color: var(--text-dark);
+    }
+
+    .input-group {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      min-width: 250px;
+      padding: 1rem 1.25rem;
+      border: 2px solid var(--border-light);
+      border-radius: 12px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      font-family: inherit;
+      background: var(--bg-light);
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: white;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    input[type="text"]::placeholder {
+      color: var(--text-light);
+    }
+
+    button {
+      padding: 1rem 2rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+      white-space: nowrap;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--primary);
+      font-weight: 500;
+      min-height: 24px;
+      margin-bottom: 1rem;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--border-light);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .error-box {
+      background: #fee;
+      border: 1px solid #fcc;
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      margin-top: 1.5rem;
+      color: #c33;
+      animation: shake 0.3s ease-out;
+    }
+
+    .success-box {
+      background: #efe;
+      border: 1px solid #cfc;
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      color: #333;
+      animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    .video-info {
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border-light);
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    .video-header {
+      display: flex;
+      gap: 2rem;
+      margin-bottom: 2rem;
+      align-items: flex-start;
+    }
+
+    .thumbnail {
+      flex-shrink: 0;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      max-width: 220px;
+      background: var(--bg-light);
+    }
+
+    .thumbnail img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .video-details h2 {
+      color: var(--text-dark);
+      margin-bottom: 1rem;
+      font-size: 1.6rem;
+      line-height: 1.4;
+    }
+
+    .meta-info {
+      color: var(--text-light);
+      font-size: 0.95rem;
+      line-height: 1.8;
+    }
+
+    .meta-item {
+      margin-bottom: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 2rem;
+      padding: 0.75rem;
+      background: var(--bg-light);
+      border-radius: 8px;
+    }
+
+    .meta-label {
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .meta-value {
+      color: var(--text-dark);
+      font-weight: 500;
+    }
+
+    .formats-section h3 {
+      color: var(--text-dark);
+      margin-top: 2.5rem;
+      margin-bottom: 1.5rem;
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .formats-grid {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .format-card {
+      border: 1px solid var(--border-light);
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+      animation: fadeIn 0.4s ease-out;
+      background: var(--bg-light);
+    }
+
+    .format-card:hover {
+      border-color: var(--primary);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
+      transform: translateY(-4px);
+      background: white;
+    }
+
+    .format-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .format-label {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .format-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      padding: 0.4rem 0.85rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .format-badge.quality {
+      background: linear-gradient(135deg, var(--accent-pink) 0%, var(--accent-red) 100%);
+    }
+
+    .format-badge.size {
+      background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-cyan) 100%);
+    }
+
+    .format-badge.codec {
+      background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+    }
+
+    .format-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .format-actions button {
+      flex: 1;
+      min-width: 140px;
+      padding: 0.75rem 1rem;
+      font-size: 0.9rem;
+    }
+
+    .download-btn.direct {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    }
+
+    .download-btn.proxy {
+      background: linear-gradient(135deg, var(--accent-pink) 0%, var(--accent-red) 100%);
+    }
+
+    .no-formats {
+      text-align: center;
+      padding: 3rem 2rem;
+      color: var(--text-light);
+      background: var(--bg-light);
+      border-radius: 12px;
+    }
+
+    /* Footer */
+    footer {
+      background: rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 3rem 1.5rem;
+      margin-top: auto;
+      animation: slideUp 0.6s ease-out;
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .footer-section h4 {
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+    }
+
+    .footer-section ul {
+      list-style: none;
+    }
+
+    .footer-section ul li {
+      margin-bottom: 0.75rem;
+      opacity: 0.9;
+    }
+
+    .footer-section a {
+      color: white;
+      text-decoration: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .footer-section a:hover {
+      opacity: 0.7;
+    }
+
+    .footer-divider {
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      margin: 2rem 0;
+    }
+
+    .footer-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      opacity: 0.8;
+      font-size: 0.9rem;
+    }
+
+    .social-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .social-links a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      transition: all 0.3s ease;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .social-links a:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+
+    /* Animations */
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 2rem;
+      }
+
+      .hero p {
+        font-size: 1rem;
+      }
+
+      .card {
+        padding: 1.5rem;
+      }
+
+      .input-group {
+        flex-direction: column;
+      }
+
+      button {
+        width: 100%;
+      }
+
+      .navbar-menu {
+        gap: 1rem;
+        font-size: 0.9rem;
+      }
+
+      .video-header {
+        flex-direction: column;
+      }
+
+      .thumbnail {
+        max-width: 100%;
+      }
+
+      .format-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .format-actions {
+        width: 100%;
+      }
+
+      .format-actions button {
+        width: 100%;
+      }
+
+      .footer-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .footer-bottom {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="navbar-content">
+      <a href="#" class="navbar-logo">🎬 VideoPeek</a>
+      <ul class="navbar-menu">
+        <li><a href="#home">Home</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#download">Download</a></li>
+        <li><a href="#help">Help</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="container">
+      <!-- Hero Section -->
+      <section class="hero" id="home">
+        <h1>🎬 Video Peek & Download</h1>
+        <p>Extract and download videos from any platform instantly</p>
+        <div class="feature-badges">
+          <span class="badge">✨ Fast Extraction</span>
+          <span class="badge">🌍 Multi-Platform</span>
+          <span class="badge">🔒 Secure & Private</span>
+          <span class="badge">⚡ Easy to Use</span>
+        </div>
+      </section>
+
+      <!-- Main Card -->
+      <div class="card" id="download">
+        <div class="card-title">📥 Extract Video Information</div>
+        <div class="input-group">
+          <input
+            id="url"
+            type="text"
+            placeholder="Paste your video URL here (YouTube, Vimeo, TikTok, etc.)"
+            autocomplete="off"
+          />
+          <button id="peekBtn">Extract Info</button>
+        </div>
+        <div class="status" id="status"></div>
+        <div id="meta"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-content">
+      <div class="footer-grid">
+        <div class="footer-section">
+          <h4>About</h4>
+          <p>VideoPeek is a fast and reliable tool for extracting and downloading videos from multiple platforms with just a few clicks.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Features</h4>
+          <ul>
+            <li><a href="#">Multi-Platform Support</a></li>
+            <li><a href="#">High Quality Downloads</a></li>
+            <li><a href="#">Fast Processing</a></li>
+            <li><a href="#">Secure & Private</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Support</h4>
+          <ul>
+            <li><a href="#">Documentation</a></li>
+            <li><a href="#">FAQ</a></li>
+            <li><a href="#">Contact Us</a></li>
+            <li><a href="#">Report Issue</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="#">Privacy Policy</a></li>
+            <li><a href="#">Terms of Service</a></li>
+            <li><a href="#">Cookie Policy</a></li>
+            <li><a href="#">Disclaimer</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-divider"></div>
+
+      <div class="footer-bottom">
+        <div>
+          <p>&copy; 2026 VideoPeek. All rights reserved. Built with ❤️ for creators.</p>
+        </div>
+        <div class="social-links">
+          <a href="#" title="Twitter">𝕏</a>
+          <a href="#" title="GitHub">⚙️</a>
+          <a href="#" title="Discord">💬</a>
+          <a href="#" title="Email">✉️</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    async function postJSON(path, body){
+      const res = await fetch(path, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+      const txt = await res.text();
+      try{ return {ok: res.ok, status: res.status, json: JSON.parse(txt)} } catch(e){ return {ok: res.ok, status: res.status, text: txt}; }
+    }
+
+    const peekBtn = document.getElementById('peekBtn');
+    const urlInput = document.getElementById('url');
+    const status = document.getElementById('status');
+    const meta = document.getElementById('meta');
+
+    function formatDuration(seconds) {
+      if (!seconds) return 'N/A';
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const secs = Math.floor(seconds % 60);
+      if (hours > 0) return `${hours}h ${minutes}m ${secs}s`;
+      if (minutes > 0) return `${minutes}m ${secs}s`;
+      return `${secs}s`;
+    }
+
+    function formatFileSize(bytes) {
+      if (!bytes) return 'Unknown size';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+      if (bytes < 1024 * 1024 * 1024) return (bytes / 1024 / 1024).toFixed(2) + ' MB';
+      return (bytes / 1024 / 1024 / 1024).toFixed(2) + ' GB';
+    }
+
+    function getFormatType(ext) {
+      const videoExtensions = ['mp4', 'mkv', 'webm', 'avi', 'mov'];
+      const audioExtensions = ['mp3', 'm4a', 'wav', 'aac'];
+      if (videoExtensions.includes(ext)) return 'video';
+      if (audioExtensions.includes(ext)) return 'audio';
+      return 'unknown';
+    }
+
+    peekBtn.addEventListener('click', async ()=>{
+      const url = urlInput.value.trim();
+      if(!url) {
+        status.innerHTML = '';
+        meta.innerHTML = '<div class="error-box">⚠️ Please enter a video URL</div>';
+        return;
+      }
+
+      status.innerHTML = '<span class="spinner"></span> Extracting video information...';
+      meta.innerHTML = '';
+      peekBtn.disabled = true;
+
+      const res = await postJSON('/api/peek', {url});
+      status.innerHTML = '';
+      peekBtn.disabled = false;
+
+      if(!res.ok){
+        const errorMsg = res.json?.error || res.text || 'Unknown error occurred';
+        meta.innerHTML = `<div class="error-box">❌ Error: ${errorMsg}</div>`;
+        return;
+      }
+
+      const info = res.json;
+      const title = info.title || info.id || 'Unknown title';
+      let html = '<div class="video-info">';
+      html += '<div class="video-header">';
+
+      // Add thumbnail if available
+      if (info.thumbnails && info.thumbnails.length > 0) {
+        const best = info.thumbnails[info.thumbnails.length - 1];
+        html += `<div class="thumbnail"><img src="${best.url}" alt="Thumbnail" onerror="this.style.display='none'" /></div>`;
+      }
+
+      html += '<div class="video-details">';
+      html += `<h2>${escapeHtml(title)}</h2>`;
+      html += '<div class="meta-info">';
+      if (info.uploader) {
+        html += `<div class="meta-item"><span class="meta-label">👤 Uploader</span><span class="meta-value">${escapeHtml(info.uploader)}</span></div>`;
+      }
+      if (info.duration) {
+        html += `<div class="meta-item"><span class="meta-label">⏱️ Duration</span><span class="meta-value">${formatDuration(info.duration)}</span></div>`;
+      }
+      html += '</div></div></div>';
+
+      html += '<div class="formats-section">';
+      html += '<h3>📥 Available Formats (' + (info.formats ? info.formats.length : 0) + ')</h3>';
+
+      if(!info.formats || info.formats.length === 0){
+        html += '<div class="no-formats">📭 No formats found for this video</div>';
+      } else {
+        // Group formats by type
+        const videoFormats = info.formats.filter(f => getFormatType(f.ext) === 'video');
+        const audioFormats = info.formats.filter(f => getFormatType(f.ext) === 'audio');
+        const otherFormats = info.formats.filter(f => getFormatType(f.ext) === 'unknown');
+
+        html += '<div class="formats-grid">';
+
+        // Video formats
+        if (videoFormats.length > 0) {
+          html += '<div style="margin-top: 1.5rem; margin-bottom: 1rem;"><h4 style="color: #333; margin-bottom: 0.5rem;">🎥 Video Formats</h4></div>';
+          videoFormats.forEach(f => renderFormat(f, url, html));
+        }
+
+        // Audio formats
+        if (audioFormats.length > 0) {
+          html += '<div style="margin-top: 1.5rem; margin-bottom: 1rem;"><h4 style="color: #333; margin-bottom: 0.5rem;">🎵 Audio Formats</h4></div>';
+          audioFormats.forEach(f => renderFormat(f, url, html));
+        }
+
+        // Other formats
+        if (otherFormats.length > 0) {
+          html += '<div style="margin-top: 1.5rem; margin-bottom: 1rem;"><h4 style="color: #333; margin-bottom: 0.5rem;">📦 Other Formats</h4></div>';
+          otherFormats.forEach(f => renderFormat(f, url, html));
+        }
+
+        html += '</div>';
+      }
+      html += '</div></div>';
+
+      meta.innerHTML = html;
+
+      // Smooth scroll to results
+      setTimeout(() => {
+        document.getElementById('meta').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    });
+
+    function renderFormat(f, url, html) {
+      const ext = (f.ext || 'bin').toUpperCase();
+      const quality = f.height ? `${f.height}p` : (f.tbr ? `${Math.round(f.tbr)}kbps` : 'N/A');
+      const size = f.filesize ? formatFileSize(f.filesize) : 'Unknown';
+      const type = getFormatType(f.ext);
+
+      const redirectUrl = '/api/download?url=' + encodeURIComponent(url) + '&format_id=' + encodeURIComponent(f.format_id) + '&mode=redirect';
+      const proxyUrl = '/api/download?url=' + encodeURIComponent(url) + '&format_id=' + encodeURIComponent(f.format_id) + '&mode=proxy';
+
+      html += '<div class="format-card">';
+      html += '<div class="format-header">';
+      html += '<div class="format-label">';
+      html += `<span class="format-badge">${ext}</span>`;
+      html += `<span class="format-badge quality">${quality}</span>`;
+      html += `<span class="format-badge size">${size}</span>`;
+      if (f.protocol) {
+        html += `<span class="format-badge codec">${f.protocol.toUpperCase()}</span>`;
+      }
+      html += '</div>';
+      html += '</div>';
+      html += '<div class="format-actions">';
+      html += `<a href="${redirectUrl}" style="text-decoration: none; flex: 1;"><button class="download-btn direct">⬇️ Direct Link</button></a>`;
+      html += `<a href="${proxyUrl}" style="text-decoration: none; flex: 1;"><button class="download-btn proxy">🌐 Via Server</button></a>`;
+      html += '</div>';
+      html += '</div>';
+
+      return html;
+    }
+
+    function escapeHtml(text) {
+      const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      };
+      return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    // Allow Enter key to trigger search
+    urlInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        peekBtn.click();
+      }
+    });
+
+    // Smooth scroll for navigation links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
+  </script>
+</body>
+</html>
